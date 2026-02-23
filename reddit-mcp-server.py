@@ -93,8 +93,8 @@ def get_subreddit_info(subreddit_name: str) -> Dict[str, Any]:
             "over_18": False,
             "subreddit_type": subreddit.subreddit_type,
             "url": f"https://reddit.com{subreddit.url}",
-            "active_user_count": subreddit.active_user_count,
-            "accounts_active": subreddit.accounts_active,
+            "active_user_count": getattr(subreddit, 'active_user_count', None),
+            "accounts_active": getattr(subreddit, 'accounts_active', None),
             "icon_img": subreddit.icon_img,
             "banner_img": subreddit.banner_img,
             "header_img": subreddit.header_img,
@@ -1397,7 +1397,7 @@ def get_trending_subreddits() -> List[Dict[str, Any]]:
                 "title": sub.title,
                 "description": sub.public_description,
                 "subscribers": sub.subscribers,
-                "active_users": sub.active_user_count,
+                "active_users": getattr(sub, 'active_user_count', None),
                 "url": f"https://reddit.com{sub.url}"
             })
         
