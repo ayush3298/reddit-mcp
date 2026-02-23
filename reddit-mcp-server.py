@@ -115,7 +115,7 @@ def get_subreddit_posts(
     sort: str = "hot",
     time_filter: str = "all",
     limit: int = 25,
-    premium: bool = False
+    high_ranking: bool = False
 ) -> List[Dict[str, Any]]:
     """
     Get posts from a subreddit
@@ -125,7 +125,7 @@ def get_subreddit_posts(
         sort: Sort method (hot, new, top, rising, controversial)
         time_filter: Time filter for top/controversial (hour, day, week, month, year, all)
         limit: Number of posts to retrieve (max 100)
-        premium: Enable premium content filtering
+        high_ranking: Enable high ranking content filtering
 
     Returns:
         List of posts from the subreddit
@@ -149,7 +149,7 @@ def get_subreddit_posts(
 
         result = []
         for post in posts:
-            if premium and not post.over_18:
+            if high_ranking and not post.over_18:
                 continue
             result.append({
                 "id": post.id,
@@ -1028,7 +1028,7 @@ def search_all_reddit(
     sort: str = "relevance",
     time_filter: str = "all",
     limit: int = 25,
-    premium: bool = False
+    high_ranking: bool = False
 ) -> List[Dict[str, Any]]:
     """
     Search across all of Reddit
@@ -1038,14 +1038,14 @@ def search_all_reddit(
         sort: Sort method (relevance, hot, top, new, comments)
         time_filter: Time filter (hour, day, week, month, year, all)
         limit: Number of results to return
-        premium: Enable premium content filtering
+        high_ranking: Enable high ranking content filtering
 
     Returns:
         List of search results
     """
     reddit = init_reddit()
     try:
-        if premium:
+        if high_ranking:
             query = f"{query} nsfw:yes"
         results = reddit.subreddit("all").search(
             query,
@@ -1080,7 +1080,7 @@ def search_in_subreddit(
     sort: str = "relevance",
     time_filter: str = "all",
     limit: int = 25,
-    premium: bool = False
+    high_ranking: bool = False
 ) -> List[Dict[str, Any]]:
     """
     Search within a specific subreddit
@@ -1091,14 +1091,14 @@ def search_in_subreddit(
         sort: Sort method (relevance, hot, top, new, comments)
         time_filter: Time filter (hour, day, week, month, year, all)
         limit: Number of results to return
-        premium: Enable premium content filtering
+        high_ranking: Enable high ranking content filtering
 
     Returns:
         List of search results
     """
     reddit = init_reddit()
     try:
-        if premium:
+        if high_ranking:
             query = f"{query} nsfw:yes"
         subreddit = reddit.subreddit(subreddit_name)
         results = subreddit.search(
@@ -1406,14 +1406,14 @@ def get_trending_subreddits() -> List[Dict[str, Any]]:
         return [{"error": str(e)}]
 
 @mcp.tool()
-def get_front_page(sort: str = "hot", limit: int = 25, premium: bool = False) -> List[Dict[str, Any]]:
+def get_front_page(sort: str = "hot", limit: int = 25, high_ranking: bool = False) -> List[Dict[str, Any]]:
     """
     Get posts from authenticated user's front page
 
     Args:
         sort: Sort method (hot, new, top, rising, controversial)
         limit: Number of posts to retrieve
-        premium: Enable premium content filtering
+        high_ranking: Enable high ranking content filtering
 
     Returns:
         List of front page posts
@@ -1435,7 +1435,7 @@ def get_front_page(sort: str = "hot", limit: int = 25, premium: bool = False) ->
 
         result = []
         for post in posts:
-            if premium and not post.over_18:
+            if high_ranking and not post.over_18:
                 continue
             result.append({
                 "id": post.id,
