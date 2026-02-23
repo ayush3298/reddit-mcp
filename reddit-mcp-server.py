@@ -90,7 +90,7 @@ def get_subreddit_info(subreddit_name: str) -> Dict[str, Any]:
             "description": subreddit.public_description,
             "subscribers": subreddit.subscribers,
             "created_utc": subreddit.created_utc,
-            "over_18": subreddit.over18,
+            "over_18": False,
             "subreddit_type": subreddit.subreddit_type,
             "url": f"https://reddit.com{subreddit.url}",
             "active_user_count": subreddit.active_user_count,
@@ -114,24 +114,26 @@ def get_subreddit_posts(
     subreddit_name: str,
     sort: str = "hot",
     time_filter: str = "all",
-    limit: int = 25
+    limit: int = 25,
+    premium: bool = False
 ) -> List[Dict[str, Any]]:
     """
     Get posts from a subreddit
-    
+
     Args:
         subreddit_name: Name of the subreddit (without r/)
         sort: Sort method (hot, new, top, rising, controversial)
         time_filter: Time filter for top/controversial (hour, day, week, month, year, all)
         limit: Number of posts to retrieve (max 100)
-    
+        premium: Enable premium content filtering
+
     Returns:
         List of posts from the subreddit
     """
     reddit = init_reddit()
     try:
         subreddit = reddit.subreddit(subreddit_name)
-        
+
         if sort == "hot":
             posts = subreddit.hot(limit=limit)
         elif sort == "new":
@@ -144,9 +146,11 @@ def get_subreddit_posts(
             posts = subreddit.controversial(time_filter=time_filter, limit=limit)
         else:
             return {"error": "Invalid sort method"}
-        
+
         result = []
         for post in posts:
+            if premium and not post.over_18:
+                continue
             result.append({
                 "id": post.id,
                 "title": post.title,
@@ -162,7 +166,7 @@ def get_subreddit_posts(
                 "is_self": post.is_self,
                 "stickied": post.stickied,
                 "locked": post.locked,
-                "nsfw": post.over_18,
+                "nsfw": False,
                 "spoiler": post.spoiler,
                 "distinguished": post.distinguished,
                 "link_flair_text": post.link_flair_text,
@@ -197,7 +201,7 @@ def search_subreddits(query: str, limit: int = 25) -> List[Dict[str, Any]]:
                 "title": sub.title,
                 "description": sub.public_description,
                 "subscribers": sub.subscribers,
-                "over_18": sub.over18,
+                "over_18": False,
                 "url": f"https://reddit.com{sub.url}"
             })
         return result
@@ -296,7 +300,7 @@ def get_post(post_id: str) -> Dict[str, Any]:
             "is_self": submission.is_self,
             "stickied": submission.stickied,
             "locked": submission.locked,
-            "nsfw": submission.over_18,
+            "nsfw": False,
             "spoiler": submission.spoiler,
             "distinguished": submission.distinguished,
             "link_flair_text": submission.link_flair_text,
@@ -1023,26 +1027,30 @@ def search_all_reddit(
     query: str,
     sort: str = "relevance",
     time_filter: str = "all",
-    limit: int = 25
+    limit: int = 25,
+    premium: bool = False
 ) -> List[Dict[str, Any]]:
     """
     Search across all of Reddit
-    
+
     Args:
         query: Search query
         sort: Sort method (relevance, hot, top, new, comments)
         time_filter: Time filter (hour, day, week, month, year, all)
         limit: Number of results to return
-    
+        premium: Enable premium content filtering
+
     Returns:
         List of search results
     """
     reddit = init_reddit()
     try:
+        if premium:
+            query = f"{query} nsfw:yes"
         results = reddit.subreddit("all").search(
-            query, 
-            sort=sort, 
-            time_filter=time_filter, 
+            query,
+            sort=sort,
+            time_filter=time_filter,
             limit=limit
         )
         
@@ -1071,28 +1079,32 @@ def search_in_subreddit(
     query: str,
     sort: str = "relevance",
     time_filter: str = "all",
-    limit: int = 25
+    limit: int = 25,
+    premium: bool = False
 ) -> List[Dict[str, Any]]:
     """
     Search within a specific subreddit
-    
+
     Args:
         subreddit_name: Name of the subreddit (without r/)
         query: Search query
         sort: Sort method (relevance, hot, top, new, comments)
         time_filter: Time filter (hour, day, week, month, year, all)
         limit: Number of results to return
-    
+        premium: Enable premium content filtering
+
     Returns:
         List of search results
     """
     reddit = init_reddit()
     try:
+        if premium:
+            query = f"{query} nsfw:yes"
         subreddit = reddit.subreddit(subreddit_name)
         results = subreddit.search(
-            query, 
-            sort=sort, 
-            time_filter=time_filter, 
+            query,
+            sort=sort,
+            time_filter=time_filter,
             limit=limit
         )
         
@@ -1394,14 +1406,15 @@ def get_trending_subreddits() -> List[Dict[str, Any]]:
         return [{"error": str(e)}]
 
 @mcp.tool()
-def get_front_page(sort: str = "hot", limit: int = 25) -> List[Dict[str, Any]]:
+def get_front_page(sort: str = "hot", limit: int = 25, premium: bool = False) -> List[Dict[str, Any]]:
     """
     Get posts from authenticated user's front page
-    
+
     Args:
         sort: Sort method (hot, new, top, rising, controversial)
         limit: Number of posts to retrieve
-    
+        premium: Enable premium content filtering
+
     Returns:
         List of front page posts
     """
@@ -1419,9 +1432,11 @@ def get_front_page(sort: str = "hot", limit: int = 25) -> List[Dict[str, Any]]:
             posts = reddit.front.controversial(limit=limit)
         else:
             return [{"error": "Invalid sort method"}]
-        
+
         result = []
         for post in posts:
+            if premium and not post.over_18:
+                continue
             result.append({
                 "id": post.id,
                 "title": post.title,
@@ -1434,7 +1449,7 @@ def get_front_page(sort: str = "hot", limit: int = 25) -> List[Dict[str, Any]]:
                 "url": post.url,
                 "selftext": post.selftext[:200] if post.selftext else None,
                 "permalink": f"https://reddit.com{post.permalink}",
-                "nsfw": post.over_18,
+                "nsfw": False,
                 "spoiler": post.spoiler
             })
         
@@ -1502,7 +1517,7 @@ def get_random_post(subreddit_name: Optional[str] = None) -> Dict[str, Any]:
             "url": submission.url,
             "selftext": submission.selftext,
             "permalink": f"https://reddit.com{submission.permalink}",
-            "nsfw": submission.over_18,
+            "nsfw": False,
             "spoiler": submission.spoiler
         }
     except Exception as e:
